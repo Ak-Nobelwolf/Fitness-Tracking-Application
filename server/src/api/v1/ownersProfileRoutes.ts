@@ -55,15 +55,18 @@ export function createOwnersProfileRouter(deps: OwnersProfileRouterDeps = {}) {
       const existingProfile = await profiles.getProfileByOwnerId(ownerId);
       const body = req.body as z.infer<typeof ownerProfileUpsertSchema>;
 
-      const input: OwnerProfile = {
-        ownerId,
+      const input: Partial<OwnerProfile> = {
         ...body,
-        updatedAt: new Date(),
       };
 
       const profile = existingProfile
         ? await profiles.updateProfile(ownerId, input)
-        : await profiles.createProfile(input);
+        : await profiles.createProfile({
+            ownerId,
+            ...input,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
 
       res.json({ profile });
     })

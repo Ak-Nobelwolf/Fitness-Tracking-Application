@@ -26,16 +26,18 @@ export function createActivityTypeRouter(deps: ActivityTypeRouterDeps = {}) {
 
   router.get(
     '/',
-    asyncHandler(async (_req, res) => {
-      const types = await activityTypes.getAllActivityTypes();
+    asyncHandler(async (req, res) => {
+      const ownerId = req.ownerId!;
+      const types = await activityTypes.getAllActivityTypes(ownerId);
       res.json({ activityTypes: types });
     })
   );
 
   router.get(
-    '/:id',
+    '/:activityTypeId',
     asyncHandler(async (req, res) => {
-      const type = await activityTypes.getActivityTypeById(req.params.id);
+      const ownerId = req.ownerId!;
+      const type = await activityTypes.getActivityTypeById(ownerId, req.params.activityTypeId);
       if (!type) {
         throw new ApiError(404, 'Activity type not found', { code: 'ACTIVITY_TYPE_NOT_FOUND' });
       }
@@ -47,15 +49,17 @@ export function createActivityTypeRouter(deps: ActivityTypeRouterDeps = {}) {
     '/',
     validateBody(activityTypeCreateSchema),
     asyncHandler(async (req, res) => {
+      const ownerId = req.ownerId!;
       const body = req.body as z.infer<typeof activityTypeCreateSchema>;
-      const id = body.id ?? randomUUID();
+      const activityTypeId = body.id ?? randomUUID();
 
       const created = await activityTypes.createActivityType({
-        id,
+        ownerId,
+        activityTypeId,
         name: body.name,
         met: body.met,
-        description: body.description,
         createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       res.status(201).json({ activityType: created });
@@ -63,27 +67,29 @@ export function createActivityTypeRouter(deps: ActivityTypeRouterDeps = {}) {
   );
 
   router.put(
-    '/:id',
+    '/:activityTypeId',
     validateBody(activityTypeUpdateSchema),
     asyncHandler(async (req, res) => {
+      const ownerId = req.ownerId!;
       const updates = Object.fromEntries(
         Object.entries(req.body as Record<string, unknown>).filter(([, v]) => v !== undefined)
       );
 
-      const updated = await activityTypes.updateActivityType(req.params.id, updates as Partial<ActivityType>);
+      const updated = await activityTypes.updateActivityType(ownerId, req.params.activityTypeId, updates as Partial<ActivityType>);
       res.json({ activityType: updated });
     })
   );
 
   router.delete(
-    '/:id',
+    '/:activityTypeId',
     asyncHandler(async (req, res) => {
-      const existing = await activityTypes.getActivityTypeById(req.params.id);
+      const ownerId = req.ownerId!;
+      const existing = await activityTypes.getActivityTypeById(ownerId, req.params.activityTypeId);
       if (!existing) {
         throw new ApiError(404, 'Activity type not found', { code: 'ACTIVITY_TYPE_NOT_FOUND' });
       }
 
-      await activityTypes.deleteActivityType(req.params.id);
+      await activityTypes.deleteActivityType(ownerId, req.params.activityTypeId);
       res.status(204).send();
     })
   );
