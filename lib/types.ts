@@ -9,6 +9,8 @@ export interface OwnerProfile {
 
 export interface ActivityType {
   activityTypeId: string;
+  name: string;
+  met: number;
   ownerId: string;
   name: string;
   met: number;
@@ -25,6 +27,17 @@ export interface Activity {
   endedAt: string;
   durationMinutes: number;
   calories: number;
+  calorieSource: 'calculated' | 'override';
+  caloriesOverride?: number;
+  notes?: string;
+  activityTypeName?: string;
+}
+
+export interface DailyAggregate {
+  activityDate: string;
+  totalDurationMinutes: number;
+  totalCalories: number;
+  activityCount: number;
   calorieSource: "calculated" | "override";
   caloriesOverride?: number;
   notes?: string;
@@ -42,6 +55,32 @@ export interface DailyAggregate {
 export interface WeeklyAggregate {
   weekStart: string;
   weekEnd: string;
+  totalDurationMinutes: number;
+  totalCalories: number;
+  activityCount: number;
+}
+
+export interface MonthlyAggregate {
+  monthStart: string;
+  monthEnd: string;
+  totalDurationMinutes: number;
+  totalCalories: number;
+  activityCount: number;
+}
+
+export interface ActivityTypeMix {
+  activityTypeName: string;
+  totalDurationMinutes: number;
+  totalCalories: number;
+  activityCount: number;
+}
+
+export interface OfflineActivity {
+  id: string;
+  data: Partial<Activity>;
+  status: 'pending' | 'syncing' | 'synced' | 'error';
+  timestamp: number;
+  error?: string;
   totalActivities: number;
   totalDuration: number;
   totalCalories: number;

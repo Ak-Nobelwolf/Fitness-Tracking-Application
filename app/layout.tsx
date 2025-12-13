@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AppProviders } from "@/providers/AppProviders";
 import "./globals.css";
+import { Providers } from "@/components/Providers";
+import { Navigation } from "@/components/Navigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,6 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  title: "Fitness Tracker",
+  description: "Track your fitness activities and progress",
   title: "FitTrack - Fitness Activity Tracker",
   description: "Track your fitness activities, monitor progress, and achieve your health goals",
   manifest: "/manifest.json",
@@ -36,6 +40,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Providers>
+          <Navigation />
+          <main className="min-h-screen bg-zinc-50 dark:bg-black">
+            {children}
+          </main>
+        </Providers>
         <AppProviders>{children}</AppProviders>
       </body>
     </html>
