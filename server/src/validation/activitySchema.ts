@@ -7,7 +7,7 @@ export interface ValidationFlags {
 }
 
 export interface ValidatedActivity {
-  data: any;
+  data: ActivityInput;
   flags: ValidationFlags;
 }
 

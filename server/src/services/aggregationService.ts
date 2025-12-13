@@ -27,6 +27,8 @@ export interface MonthlyStats {
   weekly: WeeklyStats[];
 }
 
+type SummaryRow = [number, number, number];
+
 /**
  * Get daily stats for a specific date.
  */
@@ -38,7 +40,7 @@ export async function getDailyStats(ownerId: string, date: Date = new Date()): P
     const dayStart = startOfDay(date);
     const dayEnd = endOfDay(date);
 
-    const result = await connection.execute(
+    const result = await connection.execute<SummaryRow>(
       `SELECT 
         COALESCE(SUM(CASE WHEN calories_override IS NOT NULL THEN calories_override ELSE calories_burned END), 0) as total_calories,
         COALESCE(SUM(duration_minutes), 0) as total_duration,
@@ -50,7 +52,7 @@ export async function getDailyStats(ownerId: string, date: Date = new Date()): P
       { ownerId, dayStart, dayEnd }
     );
 
-    const row = result.rows?.[0] as any[];
+    const row = result.rows?.[0];
     return {
       date: dayStart,
       totalCalories: row?.[0] ?? 0,
@@ -76,7 +78,7 @@ export async function getWeeklyStats(ownerId: string, date: Date = new Date()): 
     const weekStart = startOfWeek(date);
     const weekEnd = endOfWeek(date);
 
-    const result = await connection.execute(
+    const result = await connection.execute<SummaryRow>(
       `SELECT 
         COALESCE(SUM(CASE WHEN calories_override IS NOT NULL THEN calories_override ELSE calories_burned END), 0) as total_calories,
         COALESCE(SUM(duration_minutes), 0) as total_duration,
@@ -88,9 +90,8 @@ export async function getWeeklyStats(ownerId: string, date: Date = new Date()): 
       { ownerId, weekStart, weekEnd }
     );
 
-    const row = result.rows?.[0] as any[];
+    const row = result.rows?.[0];
 
-    // Get daily breakdown
     const daily: DailyStats[] = [];
     for (let d = new Date(weekStart); d < weekEnd; d.setDate(d.getDate() + 1)) {
       const dayStats = await getDailyStats(ownerId, d);
@@ -124,7 +125,7 @@ export async function getMonthlyStats(ownerId: string, date: Date = new Date()):
     const monthStart = startOfMonth(date);
     const monthEnd = endOfMonth(date);
 
-    const result = await connection.execute(
+    const result = await connection.execute<SummaryRow>(
       `SELECT 
         COALESCE(SUM(CASE WHEN calories_override IS NOT NULL THEN calories_override ELSE calories_burned END), 0) as total_calories,
         COALESCE(SUM(duration_minutes), 0) as total_duration,
@@ -136,11 +137,10 @@ export async function getMonthlyStats(ownerId: string, date: Date = new Date()):
       { ownerId, monthStart, monthEnd }
     );
 
-    const row = result.rows?.[0] as any[];
+    const row = result.rows?.[0];
 
-    // Get weekly breakdown
     const weekly: WeeklyStats[] = [];
-    let currentDate = new Date(monthStart);
+    const currentDate = new Date(monthStart);
     while (currentDate < monthEnd) {
       const weekStats = await getWeeklyStats(ownerId, currentDate);
       weekly.push(weekStats);
@@ -157,6 +157,64 @@ export async function getMonthlyStats(ownerId: string, date: Date = new Date()):
     };
   } catch (err) {
     logger.error({ err, ownerId, date }, 'Error fetching monthly stats');
+    throw err;
+  } finally {
+    await connection.close();
+  }
+}
+
+export interface ActivityTypeBreakdownItem {
+  activityTypeId: string;
+  activityTypeName: string;
+  totalCalories: number;
+  totalDuration: number;
+  activitiesCount: number;
+}
+
+type BreakdownRow = [string, string, number, number, number];
+
+/**
+ * Group activity totals by activity type (useful for charting).
+ */
+export async function getActivityTypeBreakdown(
+  ownerId: string,
+  from: Date,
+  to: Date
+): Promise<ActivityTypeBreakdownItem[]> {
+  const pool = getPool();
+  const connection = await pool.getConnection();
+
+  try {
+    const result = await connection.execute<BreakdownRow>(
+      `SELECT 
+        at.id as activity_type_id,
+        at.name as activity_type_name,
+        COALESCE(SUM(CASE WHEN a.calories_override IS NOT NULL THEN a.calories_override ELSE a.calories_burned END), 0) as total_calories,
+        COALESCE(SUM(a.duration_minutes), 0) as total_duration,
+        COUNT(*) as activities_count
+       FROM activities a
+       JOIN activity_types at ON at.id = a.activity_type_id
+       WHERE a.owner_id = :ownerId
+         AND a.start_time >= :from
+         AND a.start_time < :to
+       GROUP BY at.id, at.name
+       ORDER BY total_calories DESC`,
+      { ownerId, from, to }
+    );
+
+    if (!result.rows) {
+      return [];
+    }
+
+    return result.rows.map((row) => ({
+      activityTypeId: row[0],
+      activityTypeName: row[1],
+      totalCalories: row[2] ?? 0,
+      totalDuration: row[3] ?? 0,
+      activitiesCount: row[4] ?? 0,
+    }));
+  } catch (err) {
+    logger.error({ err, ownerId, from, to }, 'Error fetching activity type breakdown');
     throw err;
   } finally {
     await connection.close();

@@ -2,8 +2,6 @@ import { describe, it, expect } from 'vitest';
 import {
   validateActivity,
   parseActivity,
-  activitySchema,
-  ValidationFlags,
   ActivityValidationConfig,
 } from '../validation/activitySchema.js';
 
