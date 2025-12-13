@@ -6,19 +6,23 @@ export interface Owner {
   createdAt: Date;
 }
 
+type OwnerRow = [string, Date];
+
+function mapRowToOwner(row: OwnerRow): Owner {
+  return {
+    id: row[0],
+    createdAt: new Date(row[1]),
+  };
+}
+
 export async function createOwner(id: string): Promise<Owner> {
   const pool = getPool();
   const connection = await pool.getConnection();
 
   try {
-    const result = await connection.execute(
-      `INSERT INTO owners (id, created_at) VALUES (:id, SYSDATE) RETURNING id, created_at INTO :outId, :outCreatedAt`,
-      { id, outId: { type: 2002, dir: 3001 }, outCreatedAt: { type: 2002, dir: 3001 } }
-    );
-
+    await connection.execute(`INSERT INTO owners (id, created_at) VALUES (:id, SYSDATE)`, { id });
     await connection.commit();
 
-    const outBinds = result.outBinds as any;
     logger.debug({ ownerId: id }, 'Owner created');
 
     return {
@@ -38,17 +42,10 @@ export async function getOwnerById(id: string): Promise<Owner | null> {
   const connection = await pool.getConnection();
 
   try {
-    const result = await connection.execute(
-      `SELECT id, created_at FROM owners WHERE id = :id`,
-      { id }
-    );
+    const result = await connection.execute<OwnerRow>(`SELECT id, created_at FROM owners WHERE id = :id`, { id });
 
     if (result.rows && result.rows.length > 0) {
-      const row = result.rows[0] as any[];
-      return {
-        id: row[0],
-        createdAt: new Date(row[1]),
-      };
+      return mapRowToOwner(result.rows[0]);
     }
 
     return null;
@@ -65,18 +62,13 @@ export async function getAllOwners(): Promise<Owner[]> {
   const connection = await pool.getConnection();
 
   try {
-    const result = await connection.execute(
-      `SELECT id, created_at FROM owners ORDER BY created_at DESC`
-    );
+    const result = await connection.execute<OwnerRow>(`SELECT id, created_at FROM owners ORDER BY created_at DESC`);
 
     if (!result.rows) {
       return [];
     }
 
-    return result.rows.map((row: any) => ({
-      id: (row as any[])[0],
-      createdAt: new Date((row as any[])[1]),
-    }));
+    return result.rows.map(mapRowToOwner);
   } catch (err) {
     logger.error({ err }, 'Error fetching all owners');
     throw err;
@@ -90,10 +82,7 @@ export async function deleteOwner(id: string): Promise<void> {
   const connection = await pool.getConnection();
 
   try {
-    await connection.execute(
-      `DELETE FROM owners WHERE id = :id`,
-      { id }
-    );
+    await connection.execute(`DELETE FROM owners WHERE id = :id`, { id });
     await connection.commit();
 
     logger.debug({ ownerId: id }, 'Owner deleted');

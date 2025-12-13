@@ -9,6 +9,18 @@ export interface ActivityType {
   createdAt: Date;
 }
 
+type ActivityTypeRow = [string, string, number, string | null, Date];
+
+function mapRowToActivityType(row: ActivityTypeRow): ActivityType {
+  return {
+    id: row[0],
+    name: row[1],
+    met: row[2],
+    description: row[3] ?? undefined,
+    createdAt: new Date(row[4]),
+  };
+}
+
 export async function createActivityType(type: ActivityType): Promise<ActivityType> {
   const pool = getPool();
   const connection = await pool.getConnection();
@@ -21,7 +33,7 @@ export async function createActivityType(type: ActivityType): Promise<ActivityTy
         id: type.id,
         name: type.name,
         met: type.met,
-        description: type.description || null,
+        description: type.description ?? null,
       }
     );
 
@@ -42,21 +54,14 @@ export async function getActivityTypeById(id: string): Promise<ActivityType | nu
   const connection = await pool.getConnection();
 
   try {
-    const result = await connection.execute(
+    const result = await connection.execute<ActivityTypeRow>(
       `SELECT id, name, met, description, created_at 
        FROM activity_types WHERE id = :id`,
       { id }
     );
 
     if (result.rows && result.rows.length > 0) {
-      const row = result.rows[0] as any[];
-      return {
-        id: row[0],
-        name: row[1],
-        met: row[2],
-        description: row[3] || undefined,
-        createdAt: new Date(row[4]),
-      };
+      return mapRowToActivityType(result.rows[0]);
     }
 
     return null;
@@ -73,7 +78,7 @@ export async function getAllActivityTypes(): Promise<ActivityType[]> {
   const connection = await pool.getConnection();
 
   try {
-    const result = await connection.execute(
+    const result = await connection.execute<ActivityTypeRow>(
       `SELECT id, name, met, description, created_at 
        FROM activity_types ORDER BY name`
     );
@@ -82,13 +87,7 @@ export async function getAllActivityTypes(): Promise<ActivityType[]> {
       return [];
     }
 
-    return result.rows.map((row: any) => ({
-      id: (row as any[])[0],
-      name: (row as any[])[1],
-      met: (row as any[])[2],
-      description: (row as any[])[3] || undefined,
-      createdAt: new Date((row as any[])[4]),
-    }));
+    return result.rows.map(mapRowToActivityType);
   } catch (err) {
     logger.error({ err }, 'Error fetching all activity types');
     throw err;
@@ -117,7 +116,7 @@ export async function updateActivityType(id: string, updates: Partial<ActivityTy
         id,
         name: updated.name,
         met: updated.met,
-        description: updated.description || null,
+        description: updated.description ?? null,
       }
     );
 
@@ -138,10 +137,7 @@ export async function deleteActivityType(id: string): Promise<void> {
   const connection = await pool.getConnection();
 
   try {
-    await connection.execute(
-      `DELETE FROM activity_types WHERE id = :id`,
-      { id }
-    );
+    await connection.execute(`DELETE FROM activity_types WHERE id = :id`, { id });
     await connection.commit();
 
     logger.debug({ activityTypeId: id }, 'Activity type deleted');

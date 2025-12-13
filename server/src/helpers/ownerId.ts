@@ -24,7 +24,9 @@ export async function getOwnerId(): Promise<string> {
     );
 
     if (result.rows && result.rows.length > 0) {
-      const ownerId = ((result.rows[0] as any[])[0] as string) || null;
+      const row = result.rows[0] as unknown[];
+      const ownerId = typeof row[0] === 'string' ? row[0] : null;
+
       if (ownerId) {
         cachedOwnerId = ownerId;
         logger.debug({ ownerId: cachedOwnerId }, 'Retrieved existing owner ID');

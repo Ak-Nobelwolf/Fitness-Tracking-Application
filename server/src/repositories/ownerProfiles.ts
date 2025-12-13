@@ -10,6 +10,19 @@ export interface OwnerProfile {
   updatedAt: Date;
 }
 
+type OwnerProfileRow = [string, number, number | null, number | null, string | null, Date];
+
+function mapRowToOwnerProfile(row: OwnerProfileRow): OwnerProfile {
+  return {
+    ownerId: row[0],
+    weight: row[1],
+    height: row[2] ?? undefined,
+    age: row[3] ?? undefined,
+    gender: row[4] ?? undefined,
+    updatedAt: new Date(row[5]),
+  };
+}
+
 export async function createProfile(profile: OwnerProfile): Promise<OwnerProfile> {
   const pool = getPool();
   const connection = await pool.getConnection();
@@ -21,9 +34,9 @@ export async function createProfile(profile: OwnerProfile): Promise<OwnerProfile
       {
         ownerId: profile.ownerId,
         weight: profile.weight,
-        height: profile.height || null,
-        age: profile.age || null,
-        gender: profile.gender || null,
+        height: profile.height ?? null,
+        age: profile.age ?? null,
+        gender: profile.gender ?? null,
       }
     );
 
@@ -44,22 +57,14 @@ export async function getProfileByOwnerId(ownerId: string): Promise<OwnerProfile
   const connection = await pool.getConnection();
 
   try {
-    const result = await connection.execute(
+    const result = await connection.execute<OwnerProfileRow>(
       `SELECT owner_id, weight, height, age, gender, updated_at 
        FROM owner_profiles WHERE owner_id = :ownerId`,
       { ownerId }
     );
 
     if (result.rows && result.rows.length > 0) {
-      const row = result.rows[0] as any[];
-      return {
-        ownerId: row[0],
-        weight: row[1],
-        height: row[2] || undefined,
-        age: row[3] || undefined,
-        gender: row[4] || undefined,
-        updatedAt: new Date(row[5]),
-      };
+      return mapRowToOwnerProfile(result.rows[0]);
     }
 
     return null;
@@ -90,9 +95,9 @@ export async function updateProfile(ownerId: string, updates: Partial<OwnerProfi
       {
         ownerId,
         weight: updated.weight,
-        height: updated.height || null,
-        age: updated.age || null,
-        gender: updated.gender || null,
+        height: updated.height ?? null,
+        age: updated.age ?? null,
+        gender: updated.gender ?? null,
       }
     );
 
@@ -113,10 +118,7 @@ export async function deleteProfile(ownerId: string): Promise<void> {
   const connection = await pool.getConnection();
 
   try {
-    await connection.execute(
-      `DELETE FROM owner_profiles WHERE owner_id = :ownerId`,
-      { ownerId }
-    );
+    await connection.execute(`DELETE FROM owner_profiles WHERE owner_id = :ownerId`, { ownerId });
     await connection.commit();
 
     logger.debug({ ownerId }, 'Owner profile deleted');
