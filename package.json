@@ -2,11 +2,13 @@
   "name": "nextjs",
   "version": "0.1.0",
   "private": true,
+  "workspaces": ["server"],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "npm -w server test"
   },
   "dependencies": {
     "next": "16.0.7",
