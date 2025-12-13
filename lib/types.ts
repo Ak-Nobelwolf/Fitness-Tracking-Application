@@ -1,21 +1,26 @@
 export interface OwnerProfile {
   ownerId: string;
-  displayName: string | null;
-  weightKg: number | null;
-  heightCm: number | null;
-  timezone?: string;
-  dailyCalorieGoal?: number;
-  defaultIntensity?: string;
+  displayName?: string;
+  weightKg?: number;
+  heightCm?: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ActivityType {
   activityTypeId: string;
   name: string;
   met: number;
+  ownerId: string;
+  name: string;
+  met: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Activity {
   activityId: string;
+  ownerId: string;
   activityTypeId: string;
   activityDate: string;
   startedAt: string;
@@ -33,6 +38,18 @@ export interface DailyAggregate {
   totalDurationMinutes: number;
   totalCalories: number;
   activityCount: number;
+  calorieSource: "calculated" | "override";
+  caloriesOverride?: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DailyAggregate {
+  date: string;
+  totalActivities: number;
+  totalDuration: number;
+  totalCalories: number;
 }
 
 export interface WeeklyAggregate {
@@ -64,4 +81,14 @@ export interface OfflineActivity {
   status: 'pending' | 'syncing' | 'synced' | 'error';
   timestamp: number;
   error?: string;
+  totalActivities: number;
+  totalDuration: number;
+  totalCalories: number;
+}
+
+export interface MonthlyAggregate {
+  month: string;
+  totalActivities: number;
+  totalDuration: number;
+  totalCalories: number;
 }

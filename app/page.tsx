@@ -90,4 +90,8 @@ export default function Home() {
       </Card>
     </div>
   );
+import { redirect } from "next/navigation";
+
+export default function Home() {
+  redirect("/dashboard");
 }
