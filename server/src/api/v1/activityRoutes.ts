@@ -291,7 +291,7 @@ export function createActivityRouter(deps: ActivityRouterDeps = {}) {
       );
 
       const results = await activities.bulkUpsertActivities(
-        prepared.map(({ clientTempId: _clientTempId, ...dbItem }) => dbItem)
+        prepared.map(({ clientTempId, ...dbItem }) => dbItem)
       );
 
       const resultById = new Map(results.map((r) => [r.id, r.action]));

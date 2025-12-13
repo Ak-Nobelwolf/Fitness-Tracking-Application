@@ -2,7 +2,9 @@
   "name": "nextjs",
   "version": "0.1.0",
   "private": true,
-  "workspaces": ["server"],
+  "workspaces": [
+    "server"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,9 +13,16 @@
     "test": "npm -w server test"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "@tanstack/react-query": "^5.90.12",
+    "@tanstack/react-query-devtools": "^5.91.1",
+    "date-fns": "^4.1.0",
     "next": "16.0.7",
     "react": "19.2.1",
-    "react-dom": "19.2.1"
+    "react-dom": "19.2.1",
+    "react-hook-form": "^7.68.0",
+    "recharts": "^3.5.1",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

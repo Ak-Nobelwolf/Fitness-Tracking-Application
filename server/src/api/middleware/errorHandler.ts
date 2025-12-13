@@ -29,7 +29,7 @@ function mapOracleError(err: OracleErrorLike): ApiError {
   }
 }
 
-export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+export const errorHandler: ErrorRequestHandler = (err, _req, res) => {
   let apiError: ApiError;
 
   if (isApiError(err)) {
