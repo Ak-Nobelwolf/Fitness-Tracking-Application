@@ -3,10 +3,9 @@ import { z } from 'zod';
 export const ownerIdSchema = z.string().uuid('Invalid owner ID');
 
 export const ownerProfileUpsertSchema = z.object({
-  weight: z.number().positive('Weight must be greater than 0'),
-  height: z.number().positive('Height must be greater than 0').optional(),
-  age: z.number().int('Age must be an integer').positive('Age must be greater than 0').optional(),
-  gender: z.string().max(20).optional(),
+  displayName: z.string().max(120).optional(),
+  weightKg: z.number().positive('Weight must be greater than 0').optional(),
+  heightCm: z.number().positive('Height must be greater than 0').optional(),
 });
 
 export const activityTypeCreateSchema = z.object({

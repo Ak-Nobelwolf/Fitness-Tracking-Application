@@ -2,22 +2,24 @@ import { getPool } from '../config/oracle.js';
 import { logger } from '../logger.js';
 
 export interface ActivityType {
-  id: string;
+  ownerId: string;
+  activityTypeId: string;
   name: string;
   met: number;
-  description?: string;
   createdAt: Date;
+  updatedAt: Date;
 }
 
-type ActivityTypeRow = [string, string, number, string | null, Date];
+type ActivityTypeRow = [string, string, string, number, Date, Date];
 
 function mapRowToActivityType(row: ActivityTypeRow): ActivityType {
   return {
-    id: row[0],
-    name: row[1],
-    met: row[2],
-    description: row[3] ?? undefined,
+    ownerId: row[0],
+    activityTypeId: row[1],
+    name: row[2],
+    met: row[3],
     createdAt: new Date(row[4]),
+    updatedAt: new Date(row[5]),
   };
 }
 
@@ -27,37 +29,37 @@ export async function createActivityType(type: ActivityType): Promise<ActivityTy
 
   try {
     await connection.execute(
-      `INSERT INTO activity_types (id, name, met, description, created_at) 
-       VALUES (:id, :name, :met, :description, SYSDATE)`,
+      `INSERT INTO activity_types (owner_id, activity_type_id, name, met, created_at, updated_at) 
+       VALUES (:ownerId, :activityTypeId, :name, :met, SYSTIMESTAMP, SYSTIMESTAMP)`,
       {
-        id: type.id,
+        ownerId: type.ownerId,
+        activityTypeId: type.activityTypeId,
         name: type.name,
         met: type.met,
-        description: type.description ?? null,
       }
     );
 
     await connection.commit();
-    logger.debug({ activityTypeId: type.id }, 'Activity type created');
+    logger.debug({ ownerId: type.ownerId, activityTypeId: type.activityTypeId }, 'Activity type created');
 
-    return { ...type, createdAt: new Date() };
+    return { ...type, createdAt: new Date(), updatedAt: new Date() };
   } catch (err) {
-    logger.error({ err, activityTypeId: type.id }, 'Error creating activity type');
+    logger.error({ err, ownerId: type.ownerId, activityTypeId: type.activityTypeId }, 'Error creating activity type');
     throw err;
   } finally {
     await connection.close();
   }
 }
 
-export async function getActivityTypeById(id: string): Promise<ActivityType | null> {
+export async function getActivityTypeById(ownerId: string, activityTypeId: string): Promise<ActivityType | null> {
   const pool = getPool();
   const connection = await pool.getConnection();
 
   try {
     const result = await connection.execute<ActivityTypeRow>(
-      `SELECT id, name, met, description, created_at 
-       FROM activity_types WHERE id = :id`,
-      { id }
+      `SELECT owner_id, activity_type_id, name, met, created_at, updated_at 
+       FROM activity_types WHERE owner_id = :ownerId AND activity_type_id = :activityTypeId`,
+      { ownerId, activityTypeId }
     );
 
     if (result.rows && result.rows.length > 0) {
@@ -66,21 +68,22 @@ export async function getActivityTypeById(id: string): Promise<ActivityType | nu
 
     return null;
   } catch (err) {
-    logger.error({ err, activityTypeId: id }, 'Error fetching activity type');
+    logger.error({ err, ownerId, activityTypeId }, 'Error fetching activity type');
     throw err;
   } finally {
     await connection.close();
   }
 }
 
-export async function getAllActivityTypes(): Promise<ActivityType[]> {
+export async function getAllActivityTypes(ownerId: string): Promise<ActivityType[]> {
   const pool = getPool();
   const connection = await pool.getConnection();
 
   try {
     const result = await connection.execute<ActivityTypeRow>(
-      `SELECT id, name, met, description, created_at 
-       FROM activity_types ORDER BY name`
+      `SELECT owner_id, activity_type_id, name, met, created_at, updated_at 
+       FROM activity_types WHERE owner_id = :ownerId ORDER BY name`,
+      { ownerId }
     );
 
     if (!result.rows) {
@@ -89,60 +92,67 @@ export async function getAllActivityTypes(): Promise<ActivityType[]> {
 
     return result.rows.map(mapRowToActivityType);
   } catch (err) {
-    logger.error({ err }, 'Error fetching all activity types');
+    logger.error({ err, ownerId }, 'Error fetching all activity types');
     throw err;
   } finally {
     await connection.close();
   }
 }
 
-export async function updateActivityType(id: string, updates: Partial<ActivityType>): Promise<ActivityType> {
+export async function updateActivityType(
+  ownerId: string,
+  activityTypeId: string,
+  updates: Partial<ActivityType>
+): Promise<ActivityType> {
   const pool = getPool();
   const connection = await pool.getConnection();
 
   try {
-    const existing = await getActivityTypeById(id);
+    const existing = await getActivityTypeById(ownerId, activityTypeId);
     if (!existing) {
-      throw new Error(`Activity type not found: ${id}`);
+      throw new Error(`Activity type not found: ${activityTypeId}`);
     }
 
-    const updated = { ...existing, ...updates, id };
+    const updated = { ...existing, ...updates, ownerId, activityTypeId };
 
     await connection.execute(
       `UPDATE activity_types 
-       SET name = :name, met = :met, description = :description
-       WHERE id = :id`,
+       SET name = :name, met = :met, updated_at = SYSTIMESTAMP
+       WHERE owner_id = :ownerId AND activity_type_id = :activityTypeId`,
       {
-        id,
+        ownerId,
+        activityTypeId,
         name: updated.name,
         met: updated.met,
-        description: updated.description ?? null,
       }
     );
 
     await connection.commit();
-    logger.debug({ activityTypeId: id }, 'Activity type updated');
+    logger.debug({ ownerId, activityTypeId }, 'Activity type updated');
 
-    return updated;
+    return { ...updated, updatedAt: new Date() };
   } catch (err) {
-    logger.error({ err, activityTypeId: id }, 'Error updating activity type');
+    logger.error({ err, ownerId, activityTypeId }, 'Error updating activity type');
     throw err;
   } finally {
     await connection.close();
   }
 }
 
-export async function deleteActivityType(id: string): Promise<void> {
+export async function deleteActivityType(ownerId: string, activityTypeId: string): Promise<void> {
   const pool = getPool();
   const connection = await pool.getConnection();
 
   try {
-    await connection.execute(`DELETE FROM activity_types WHERE id = :id`, { id });
+    await connection.execute(
+      `DELETE FROM activity_types WHERE owner_id = :ownerId AND activity_type_id = :activityTypeId`,
+      { ownerId, activityTypeId }
+    );
     await connection.commit();
 
-    logger.debug({ activityTypeId: id }, 'Activity type deleted');
+    logger.debug({ ownerId, activityTypeId }, 'Activity type deleted');
   } catch (err) {
-    logger.error({ err, activityTypeId: id }, 'Error deleting activity type');
+    logger.error({ err, ownerId, activityTypeId }, 'Error deleting activity type');
     throw err;
   } finally {
     await connection.close();

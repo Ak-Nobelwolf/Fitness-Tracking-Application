@@ -29,7 +29,7 @@ export async function calculateCalories(
 ): Promise<CalorieCalculationResult> {
   try {
     const [activityType, profile] = await Promise.all([
-      getActivityTypeById(activityTypeId),
+      getActivityTypeById(ownerId, activityTypeId),
       getProfileByOwnerId(ownerId),
     ]);
 
@@ -41,8 +41,12 @@ export async function calculateCalories(
       throw new Error(`Owner profile not found: ${ownerId}`);
     }
 
+    if (!profile.weightKg) {
+      throw new Error(`Owner profile missing weight: ${ownerId}`);
+    }
+
     const durationHours = durationMinutes / 60;
-    const calculatedCalories = activityType.met * profile.weight * durationHours;
+    const calculatedCalories = activityType.met * profile.weightKg * durationHours;
 
     const actualCalories = overrideCalories !== undefined ? overrideCalories : calculatedCalories;
 
@@ -52,7 +56,7 @@ export async function calculateCalories(
         activityTypeId,
         durationMinutes,
         met: activityType.met,
-        weight: profile.weight,
+        weight: profile.weightKg,
         calculatedCalories,
         overrideCalories,
         actualCalories,
@@ -65,7 +69,7 @@ export async function calculateCalories(
       actualCalories: Math.round(actualCalories * 100) / 100,
       isOverridden: overrideCalories !== undefined,
       met: activityType.met,
-      weight: profile.weight,
+      weight: profile.weightKg,
       durationHours,
     };
   } catch (err) {

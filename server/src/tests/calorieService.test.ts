@@ -16,15 +16,18 @@ describe('calorieService', () => {
   describe('calculateCalories', () => {
     it('should calculate calories using MET × weight × duration formula', async () => {
       const mockActivityType = {
-        id: 'running-123',
+        ownerId: 'owner-123',
+        activityTypeId: 'running-123',
         name: 'Running',
         met: 8.0,
         createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       const mockProfile = {
         ownerId: 'owner-123',
-        weight: 70,
+        weightKg: 70,
+        createdAt: new Date(),
         updatedAt: new Date(),
       };
 
@@ -44,15 +47,18 @@ describe('calorieService', () => {
 
     it('should handle decimal durations correctly', async () => {
       const mockActivityType = {
-        id: 'walking-123',
+        ownerId: 'owner-123',
+        activityTypeId: 'walking-123',
         name: 'Walking',
         met: 3.5,
         createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       const mockProfile = {
         ownerId: 'owner-123',
-        weight: 75,
+        weightKg: 75,
+        createdAt: new Date(),
         updatedAt: new Date(),
       };
 
@@ -69,15 +75,18 @@ describe('calorieService', () => {
 
     it('should use override calories when provided', async () => {
       const mockActivityType = {
-        id: 'cycling-123',
+        ownerId: 'owner-123',
+        activityTypeId: 'cycling-123',
         name: 'Cycling',
         met: 7.5,
         createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       const mockProfile = {
         ownerId: 'owner-123',
-        weight: 80,
+        weightKg: 80,
+        createdAt: new Date(),
         updatedAt: new Date(),
       };
 
@@ -104,10 +113,12 @@ describe('calorieService', () => {
 
     it('should throw error when owner profile not found', async () => {
       const mockActivityType = {
-        id: 'running-123',
+        ownerId: 'owner-123',
+        activityTypeId: 'running-123',
         name: 'Running',
         met: 8.0,
         createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       vi.mocked(activityTypesRepo.getActivityTypeById).mockResolvedValue(mockActivityType);

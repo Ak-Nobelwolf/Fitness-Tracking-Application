@@ -3,22 +3,22 @@ import { logger } from '../logger.js';
 
 export interface OwnerProfile {
   ownerId: string;
-  weight: number;
-  height?: number;
-  age?: number;
-  gender?: string;
+  displayName?: string;
+  weightKg?: number;
+  heightCm?: number;
+  createdAt: Date;
   updatedAt: Date;
 }
 
-type OwnerProfileRow = [string, number, number | null, number | null, string | null, Date];
+type OwnerProfileRow = [string, string | null, number | null, number | null, Date, Date];
 
 function mapRowToOwnerProfile(row: OwnerProfileRow): OwnerProfile {
   return {
     ownerId: row[0],
-    weight: row[1],
-    height: row[2] ?? undefined,
-    age: row[3] ?? undefined,
-    gender: row[4] ?? undefined,
+    displayName: row[1] ?? undefined,
+    weightKg: row[2] ?? undefined,
+    heightCm: row[3] ?? undefined,
+    createdAt: new Date(row[4]),
     updatedAt: new Date(row[5]),
   };
 }
@@ -29,21 +29,20 @@ export async function createProfile(profile: OwnerProfile): Promise<OwnerProfile
 
   try {
     await connection.execute(
-      `INSERT INTO owner_profiles (owner_id, weight, height, age, gender, updated_at) 
-       VALUES (:ownerId, :weight, :height, :age, :gender, SYSDATE)`,
+      `INSERT INTO owner_profiles (owner_id, display_name, weight_kg, height_cm, created_at, updated_at) 
+       VALUES (:ownerId, :displayName, :weightKg, :heightCm, SYSTIMESTAMP, SYSTIMESTAMP)`,
       {
         ownerId: profile.ownerId,
-        weight: profile.weight,
-        height: profile.height ?? null,
-        age: profile.age ?? null,
-        gender: profile.gender ?? null,
+        displayName: profile.displayName ?? null,
+        weightKg: profile.weightKg ?? null,
+        heightCm: profile.heightCm ?? null,
       }
     );
 
     await connection.commit();
     logger.debug({ ownerId: profile.ownerId }, 'Owner profile created');
 
-    return { ...profile, updatedAt: new Date() };
+    return { ...profile, createdAt: new Date(), updatedAt: new Date() };
   } catch (err) {
     logger.error({ err, ownerId: profile.ownerId }, 'Error creating owner profile');
     throw err;
@@ -58,7 +57,7 @@ export async function getProfileByOwnerId(ownerId: string): Promise<OwnerProfile
 
   try {
     const result = await connection.execute<OwnerProfileRow>(
-      `SELECT owner_id, weight, height, age, gender, updated_at 
+      `SELECT owner_id, display_name, weight_kg, height_cm, created_at, updated_at 
        FROM owner_profiles WHERE owner_id = :ownerId`,
       { ownerId }
     );
@@ -90,14 +89,13 @@ export async function updateProfile(ownerId: string, updates: Partial<OwnerProfi
 
     await connection.execute(
       `UPDATE owner_profiles 
-       SET weight = :weight, height = :height, age = :age, gender = :gender, updated_at = SYSDATE
+       SET display_name = :displayName, weight_kg = :weightKg, height_cm = :heightCm, updated_at = SYSTIMESTAMP
        WHERE owner_id = :ownerId`,
       {
         ownerId,
-        weight: updated.weight,
-        height: updated.height ?? null,
-        age: updated.age ?? null,
-        gender: updated.gender ?? null,
+        displayName: updated.displayName ?? null,
+        weightKg: updated.weightKg ?? null,
+        heightCm: updated.heightCm ?? null,
       }
     );
 
