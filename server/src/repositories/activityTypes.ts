@@ -69,8 +69,11 @@ export async function getActivityTypeById(ownerId: string, activityTypeId: strin
 
     return null;
   } catch (err) {
-    logger.error({ err, ownerId, activityTypeId }, 'Error fetching activity type');
-    throw err;
+    logger.error({ err, ownerId, activityTypeId }, 'Error fetching activity type, falling back to in-memory data');
+    
+    // Fallback to in-memory data when database is not available
+    const allTypes = getDefaultActivityTypesInMemory(ownerId);
+    return allTypes.find(type => type.activityTypeId === activityTypeId) || null;
   } finally {
     await connection.close();
   }
@@ -107,11 +110,136 @@ export async function getAllActivityTypes(ownerId: string): Promise<ActivityType
 
     return result.rows.map(mapRowToActivityType);
   } catch (err) {
-    logger.error({ err, ownerId }, 'Error fetching all activity types');
-    throw err;
+    logger.error({ err, ownerId }, 'Error fetching all activity types, falling back to in-memory data');
+    
+    // Fallback to in-memory default activity types when database is not available
+    return getDefaultActivityTypesInMemory(ownerId);
   } finally {
     await connection.close();
   }
+}
+
+function getDefaultActivityTypesInMemory(ownerId: string): ActivityType[] {
+  const now = new Date();
+  const defaultActivityTypes = [
+    // Walking & Running
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1', name: 'Walking (2 mph)', met: 2.8 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2', name: 'Walking (3 mph)', met: 3.3 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3', name: 'Walking (4 mph)', met: 5.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa4', name: 'Jogging (5 mph)', met: 8.3 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa5', name: 'Running (6 mph)', met: 9.8 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa6', name: 'Running (7 mph)', met: 11.5 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa7', name: 'Running (8 mph)', met: 13.5 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa8', name: 'Sprinting (10 mph)', met: 16.0 },
+    
+    // Cycling
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa9', name: 'Cycling (leisure)', met: 4.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa10', name: 'Cycling (moderate)', met: 7.5 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa11', name: 'Cycling (vigorous)', met: 10.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa12', name: 'Mountain Biking', met: 12.0 },
+    
+    // Swimming
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa13', name: 'Swimming (leisure)', met: 6.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa14', name: 'Swimming (moderate)', met: 8.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa15', name: 'Swimming (vigorous)', met: 10.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa16', name: 'Swimming (butterfly)', met: 13.8 },
+    
+    // Water Sports
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa17', name: 'Rowing (moderate)', met: 7.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa18', name: 'Kayaking', met: 5.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa19', name: 'Surfing', met: 3.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa20', name: 'Water Skiing', met: 7.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa21', name: 'Wakeboarding', met: 6.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa22', name: 'Windsurfing', met: 8.0 },
+    
+    // Ball Sports
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa23', name: 'Basketball (game)', met: 8.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa24', name: 'Soccer (game)', met: 7.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa25', name: 'Tennis (singles)', met: 8.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa26', name: 'Tennis (doubles)', met: 6.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa27', name: 'Badminton', met: 5.5 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa28', name: 'Cricket', met: 4.8 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa29', name: 'Volleyball', met: 6.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa30', name: 'Baseball', met: 5.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa31', name: 'Golf (walking)', met: 4.3 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa32', name: 'American Football', met: 8.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa33', name: 'Rugby', met: 10.3 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa34', name: 'Ice Hockey', met: 8.0 },
+    
+    // Racket Sports
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa35', name: 'Squash', met: 12.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa36', name: 'Racquetball', met: 8.5 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa37', name: 'Handball', met: 12.0 },
+    
+    // Precision Sports
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa38', name: 'Billiards', met: 2.5 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa39', name: 'Bowling', met: 3.8 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa40', name: 'Darts', met: 2.5 },
+    
+    // Outdoor Activities
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa41', name: 'Hiking (cross-country)', met: 6.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa42', name: 'Rock Climbing', met: 8.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa43', name: 'Skiing (downhill)', met: 7.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa44', name: 'Skiing (cross-country)', met: 9.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa45', name: 'Snowboarding', met: 7.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa46', name: 'Ice Skating', met: 7.0 },
+    
+    // Dance & Aerobics
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa47', name: 'Aerobics (low impact)', met: 5.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa48', name: 'Aerobics (high impact)', met: 7.5 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa49', name: 'Hip Hop Dancing', met: 5.5 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa50', name: 'Ballet', met: 5.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa51', name: 'Zumba', met: 7.5 },
+    
+    // Martial Arts
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa52', name: 'Boxing', met: 12.8 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa53', name: 'Karate', met: 10.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa54', name: 'Judo', met: 10.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa55', name: 'Taekwondo', met: 10.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa56', name: 'Muay Thai', met: 11.8 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa57', name: 'Tai Chi', met: 3.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa58', name: 'Wrestling', met: 6.0 },
+    
+    // Gym & Fitness
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa59', name: 'Weight Training', met: 6.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa60', name: 'Circuit Training', met: 8.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa61', name: 'Elliptical Trainer', met: 5.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa62', name: 'Stair Climber', met: 8.8 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa63', name: 'Treadmill (walking)', met: 3.5 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa64', name: 'Treadmill (running)', met: 9.8 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa65', name: 'Rowing Machine', met: 7.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa66', name: 'Stationary Bike', met: 7.5 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa67', name: 'Yoga (Hatha)', met: 2.5 },
+    
+    // Yoga & Meditation
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa68', name: 'Yoga (Power)', met: 4.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa69', name: 'Yoga (Bikram)', met: 4.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa70', name: 'Pilates', met: 3.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa71', name: 'Meditation', met: 1.3 },
+    
+    // Sports & Recreation
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa72', name: 'Frisbee', met: 3.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa73', name: 'Archery', met: 3.5 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa74', name: 'Fencing', met: 6.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa75', name: 'Gymnastics', met: 4.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa76', name: 'Cheerleading', met: 6.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa77', name: 'Skateboarding', met: 5.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa78', name: 'Rollerblading', met: 7.5 },
+    
+    // Walking & Climbing
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa79', name: 'Stair Climbing', met: 8.8 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa80', name: 'Ladder Climbing', met: 8.0 },
+    { activityTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa81', name: 'Rope Jumping', met: 11.0 },
+  ];
+
+  return defaultActivityTypes.map(type => ({
+    ownerId,
+    activityTypeId: type.activityTypeId,
+    name: type.name,
+    met: type.met,
+    createdAt: now,
+    updatedAt: now,
+  }));
 }
 
 async function seedDefaultActivityTypes(connection: oracledb.Connection, ownerId: string): Promise<void> {
