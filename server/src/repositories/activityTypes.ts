@@ -226,23 +226,26 @@ async function seedDefaultActivityTypes(connection: oracledb.Connection, ownerId
     { name: 'Rope Jumping', met: 11.0, id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa81' },
   ];
 
-  const insertPromises = defaultActivityTypes.map(activityType =>
-    connection.execute(
-      `INSERT INTO activity_types (owner_id, activity_type_id, name, met, created_at, updated_at) 
-       VALUES (:ownerId, :activityTypeId, :name, :met, SYSTIMESTAMP, SYSTIMESTAMP)`,
-      {
-        ownerId,
-        activityTypeId: activityType.id,
-        name: activityType.name,
-        met: activityType.met,
-      }
-    )
-  );
+  try {
+    for (const activityType of defaultActivityTypes) {
+      await connection.execute(
+        `INSERT INTO activity_types (owner_id, activity_type_id, name, met, created_at, updated_at) 
+         VALUES (:ownerId, :activityTypeId, :name, :met, SYSTIMESTAMP, SYSTIMESTAMP)`,
+        {
+          ownerId,
+          activityTypeId: activityType.id,
+          name: activityType.name,
+          met: activityType.met,
+        }
+      );
+    }
 
-  await Promise.all(insertPromises);
-  await connection.commit();
-  
-  logger.info({ ownerId, count: defaultActivityTypes.length }, 'Seeded default activity types');
+    await connection.commit();
+    logger.info({ ownerId, count: defaultActivityTypes.length }, 'Seeded default activity types');
+  } catch (err) {
+    logger.error({ err, ownerId }, 'Error seeding default activity types');
+    throw err;
+  }
 }
 
 export async function updateActivityType(
