@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   title: "FitTrack - Fitness Activity Tracker",
   description: "Track your fitness activities, monitor progress, and achieve your health goals",
   manifest: "/manifest.json",
+  other: {
+    'permissions-policy': 'clipboard-write=*'
+  }
 };
 
 export const viewport = {

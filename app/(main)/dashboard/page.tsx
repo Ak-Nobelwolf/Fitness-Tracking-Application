@@ -1,10 +1,11 @@
 "use client";
 
-import { useOwnerIdContext, useSyncQueueContext } from "@/providers/AppProviders";
+import { useOwnerIdContext, useOfflineQueueContext } from "@/providers/AppProviders";
 
 export default function DashboardPage() {
   const { ownerId, isLoading } = useOwnerIdContext();
-  const { queueCount, isSyncing } = useSyncQueueContext();
+  const { isOnline, getPendingCount } = useOfflineQueueContext();
+  const queueCount = getPendingCount();
 
   if (isLoading) {
     return (
@@ -42,7 +43,7 @@ export default function DashboardPage() {
           <div className="flex flex-col">
             <span className="text-sm font-medium text-muted-foreground">Sync Status</span>
             <span className="text-2xl font-bold mt-2">
-              {isSyncing ? "Syncing..." : "Ready"}
+              {isOnline ? "Online" : "Offline"}
             </span>
           </div>
         </div>
@@ -56,9 +57,9 @@ export default function DashboardPage() {
 
         <div className="rounded-lg border border-border bg-card p-6">
           <div className="flex flex-col">
-            <span className="text-sm font-medium text-muted-foreground">Status</span>
+            <span className="text-sm font-medium text-muted-foreground">Connection</span>
             <span className="text-2xl font-bold mt-2">
-              {navigator.onLine ? "Online" : "Offline"}
+              {navigator.onLine ? "Connected" : "Disconnected"}
             </span>
           </div>
         </div>
