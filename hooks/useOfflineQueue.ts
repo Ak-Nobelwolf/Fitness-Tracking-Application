@@ -41,6 +41,9 @@ export function useOfflineQueue() {
       data,
       status: 'pending',
       timestamp: Date.now(),
+      totalActivities: 0,
+      totalDuration: 0,
+      totalCalories: 0,
     };
     setQueue(prev => [...prev, item]);
     return item.id;

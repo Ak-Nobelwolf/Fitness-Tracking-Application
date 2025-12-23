@@ -17,7 +17,7 @@ interface OfflineQueueContextType {
   queue: unknown[];
   isOnline: boolean;
   addToQueue: (data: Record<string, unknown>) => string;
-  updateStatus: (id: string, status: 'pending' | 'processing' | 'completed' | 'failed', error?: string) => void;
+  updateStatus: (id: string, status: 'pending' | 'syncing' | 'synced' | 'error', error?: string) => void;
   removeFromQueue: (id: string) => void;
   clearQueue: () => void;
   getPendingCount: () => number;
