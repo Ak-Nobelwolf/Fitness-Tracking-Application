@@ -12,8 +12,6 @@ export interface ActivityType {
   name: string;
   met: number;
   ownerId: string;
-  name: string;
-  met: number;
   createdAt: string;
   updatedAt: string;
 }

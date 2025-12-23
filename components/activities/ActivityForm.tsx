@@ -47,20 +47,22 @@ export function ActivityForm({ activityTypes, onSubmit, onCancel, initialData, i
   }));
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <Select
         label="Activity Type"
         {...register('activityTypeId')}
         error={errors.activityTypeId?.message}
         options={[{ value: '', label: 'Select activity type...' }, ...activityTypeOptions]}
+        className="border-2 border-primary/20 focus:border-primary focus:ring-primary/20"
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <Input
           label="Start Time"
           type="datetime-local"
           {...register('startTime')}
           error={errors.startTime?.message}
+          className="border-2 border-primary/20 focus:border-primary focus:ring-primary/20"
         />
 
         <Input
@@ -68,69 +70,93 @@ export function ActivityForm({ activityTypes, onSubmit, onCancel, initialData, i
           type="datetime-local"
           {...register('endTime')}
           error={errors.endTime?.message}
+          className="border-2 border-primary/20 focus:border-primary focus:ring-primary/20"
         />
       </div>
 
-      <Input
-        label="Duration (minutes)"
-        type="number"
-        {...register('durationMinutes')}
-        error={errors.durationMinutes?.message}
-        helperText="Auto-calculated from start/end time"
-      />
+      <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-xl p-4 border border-primary/20">
+        <Input
+          label="Duration (minutes)"
+          type="number"
+          {...register('durationMinutes')}
+          error={errors.durationMinutes?.message}
+          helperText="Auto-calculated from start/end time"
+          className="border-2 border-primary/20 focus:border-primary focus:ring-primary/20 bg-white/50"
+        />
+      </div>
 
-      <Select
-        label="Intensity"
-        {...register('intensity')}
-        error={errors.intensity?.message}
-        options={[
-          { value: 'low', label: 'Low' },
-          { value: 'moderate', label: 'Moderate' },
-          { value: 'high', label: 'High' },
-        ]}
-      />
+      <div className="bg-gradient-to-r from-secondary/10 to-primary/10 rounded-xl p-4 border border-secondary/20">
+        <Select
+          label="Intensity"
+          {...register('intensity')}
+          error={errors.intensity?.message}
+          options={[
+            { value: 'low', label: '🟢 Low' },
+            { value: 'moderate', label: '🟡 Moderate' },
+            { value: 'high', label: '🔴 High' },
+          ]}
+          className="border-2 border-secondary/20 focus:border-secondary focus:ring-secondary/20 bg-white/50"
+        />
+      </div>
 
-      <div className="space-y-3">
-        <label className="flex items-center gap-2">
+      <div className="space-y-4">
+        <label className="flex items-center gap-3 p-4 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl border border-primary/20 cursor-pointer hover:from-primary/10 hover:to-secondary/10 transition-colors">
           <input
             type="checkbox"
             {...register('useManualCalories')}
-            className="rounded border-zinc-300 dark:border-zinc-600"
+            className="h-5 w-5 rounded border-primary/30 text-primary focus:ring-primary/20"
           />
-          <span className="text-sm text-zinc-700 dark:text-zinc-300">Manual calorie override</span>
+          <span className="text-sm font-medium text-foreground">Manual calorie override</span>
         </label>
 
         {useManualCalories && (
-          <Input
-            label="Calories"
-            type="number"
-            {...register('caloriesOverride')}
-            error={errors.caloriesOverride?.message}
-            placeholder="Enter manual calorie value"
-          />
+          <div className="bg-gradient-to-r from-warning/10 to-warning/5 rounded-xl p-4 border border-warning/30">
+            <Input
+              label="Calories"
+              type="number"
+              {...register('caloriesOverride')}
+              error={errors.caloriesOverride?.message}
+              placeholder="Enter manual calorie value"
+              className="border-2 border-warning/30 focus:border-warning focus:ring-warning/20 bg-white/70"
+            />
+          </div>
         )}
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+      <div className="space-y-3">
+        <label className="block text-sm font-semibold text-foreground mb-2">
           Notes
         </label>
-        <textarea
-          {...register('notes')}
-          className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
-          rows={3}
-          placeholder="Add any notes about this activity..."
-        />
+        <div className="relative">
+          <textarea
+            {...register('notes')}
+            className="w-full px-4 py-3 border-2 border-primary/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-gradient-to-br from-white/50 to-white/30 text-foreground placeholder-muted-foreground resize-none transition-all"
+            rows={4}
+            placeholder="Add any notes about this activity... How did you feel? What was the weather like?"
+          />
+          <div className="absolute top-2 right-2 text-xs text-muted-foreground">
+            {watch('notes')?.length || 0}/500
+          </div>
+        </div>
         {errors.notes && (
-          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.notes.message}</p>
+          <p className="mt-1 text-sm text-error font-medium">{errors.notes.message}</p>
         )}
       </div>
 
-      <div className="flex gap-3 pt-4">
-        <Button type="submit" isLoading={isLoading}>
-          {initialData ? 'Update Activity' : 'Add Activity'}
+      <div className="flex gap-4 pt-6 border-t border-border">
+        <Button 
+          type="submit" 
+          isLoading={isLoading}
+          className="flex-1 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+        >
+          {initialData ? '✨ Update Activity' : '⚡ Add Activity'}
         </Button>
-        <Button type="button" variant="secondary" onClick={onCancel}>
+        <Button 
+          type="button" 
+          variant="secondary" 
+          onClick={onCancel}
+          className="bg-gradient-to-r from-secondary/20 to-secondary/10 hover:from-secondary/30 hover:to-secondary/20 border-2 border-secondary/30 text-secondary-foreground"
+        >
           Cancel
         </Button>
       </div>
