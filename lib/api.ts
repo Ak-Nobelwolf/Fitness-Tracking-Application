@@ -44,7 +44,8 @@ export const api = {
       const response = await fetch(`${API_BASE}/api/v1/activity-types`, {
         headers: getHeaders(ownerId),
       });
-      return handleResponse<ActivityType[]>(response);
+      const data = await handleResponse<{ activityTypes: ActivityType[] }>(response);
+      return data.activityTypes;
     },
     create: async (ownerId: string, data: Record<string, unknown>): Promise<ActivityType> => {
       const response = await fetch(`${API_BASE}/api/v1/activity-types`, {
