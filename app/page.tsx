@@ -1,10 +1,13 @@
 'use client';
 
-import Link from 'next/link';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { useEffect } from 'react';
+import { redirect } from 'next/navigation';
 
 export default function Home() {
+  useEffect(() => {
+    redirect('/dashboard');
+  }, []);
+
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6">
       <div className="text-center mb-12 pt-8">
@@ -17,7 +20,7 @@ export default function Home() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        <Card className="text-center">
+        <div className="text-center">
           <div className="mb-4 text-4xl">👤</div>
           <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50 mb-2">
             Profile
@@ -25,12 +28,9 @@ export default function Home() {
           <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
             Set up your personal information and preferences
           </p>
-          <Link href="/profile">
-            <Button className="w-full">Go to Profile</Button>
-          </Link>
-        </Card>
+        </div>
 
-        <Card className="text-center">
+        <div className="text-center">
           <div className="mb-4 text-4xl">🏃</div>
           <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50 mb-2">
             Activities
@@ -38,12 +38,9 @@ export default function Home() {
           <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
             Log and manage your fitness activities
           </p>
-          <Link href="/activities">
-            <Button className="w-full">View Activities</Button>
-          </Link>
-        </Card>
+        </div>
 
-        <Card className="text-center">
+        <div className="text-center">
           <div className="mb-4 text-4xl">📊</div>
           <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50 mb-2">
             Dashboard
@@ -51,13 +48,10 @@ export default function Home() {
           <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
             Visualize your progress with charts and stats
           </p>
-          <Link href="/dashboard">
-            <Button className="w-full">View Dashboard</Button>
-          </Link>
-        </Card>
+        </div>
       </div>
 
-      <Card>
+      <div className="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 p-6">
         <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-4">
           Features
         </h2>
@@ -87,11 +81,7 @@ export default function Home() {
             <span>Mobile-first responsive design</span>
           </li>
         </ul>
-      </Card>
+      </div>
     </div>
   );
-import { redirect } from "next/navigation";
-
-export default function Home() {
-  redirect("/dashboard");
 }

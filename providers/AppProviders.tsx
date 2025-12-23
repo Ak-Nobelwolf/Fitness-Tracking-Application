@@ -3,7 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode, createContext, useContext, useState, useEffect } from "react";
 import { useOwnerId } from "@/hooks/useOwnerId";
-import { useSyncQueue } from "@/hooks/useSyncQueue";
+import { useOfflineQueue } from "@/hooks/useOfflineQueue";
 import { registerServiceWorker } from "@/lib/registerServiceWorker";
 
 interface OwnerIdContextType {
@@ -13,17 +13,18 @@ interface OwnerIdContextType {
   clearOwnerId: () => void;
 }
 
-interface SyncQueueContextType {
-  isSyncing: boolean;
-  queueCount: number;
-  lastSyncError: Error | null;
-  syncQueue: () => Promise<void>;
-  addToQueue: (method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE", url: string, data?: unknown) => Promise<void>;
-  clearQueue: () => Promise<void>;
+interface OfflineQueueContextType {
+  queue: unknown[];
+  isOnline: boolean;
+  addToQueue: (data: Record<string, unknown>) => string;
+  updateStatus: (id: string, status: 'pending' | 'processing' | 'completed' | 'failed', error?: string) => void;
+  removeFromQueue: (id: string) => void;
+  clearQueue: () => void;
+  getPendingCount: () => number;
 }
 
 const OwnerIdContext = createContext<OwnerIdContextType | undefined>(undefined);
-const SyncQueueContext = createContext<SyncQueueContextType | undefined>(undefined);
+const OfflineQueueContext = createContext<OfflineQueueContextType | undefined>(undefined);
 
 export function useOwnerIdContext() {
   const context = useContext(OwnerIdContext);
@@ -33,10 +34,10 @@ export function useOwnerIdContext() {
   return context;
 }
 
-export function useSyncQueueContext() {
-  const context = useContext(SyncQueueContext);
+export function useOfflineQueueContext() {
+  const context = useContext(OfflineQueueContext);
   if (!context) {
-    throw new Error("useSyncQueueContext must be used within AppProviders");
+    throw new Error("useOfflineQueueContext must be used within AppProviders");
   }
   return context;
 }
@@ -57,7 +58,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
   );
 
   const ownerIdData = useOwnerId();
-  const syncQueueData = useSyncQueue();
+  const offlineQueueData = useOfflineQueue();
 
   useEffect(() => {
     registerServiceWorker();
@@ -66,9 +67,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <OwnerIdContext.Provider value={ownerIdData}>
-        <SyncQueueContext.Provider value={syncQueueData}>
+        <OfflineQueueContext.Provider value={offlineQueueData}>
           {children}
-        </SyncQueueContext.Provider>
+        </OfflineQueueContext.Provider>
       </OwnerIdContext.Provider>
     </QueryClientProvider>
   );
